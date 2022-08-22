@@ -1,0 +1,6 @@
+#Global ignore for vim temp files
+*.sw?
+
+#Global ignore for sublime text project files
+*.sublime-project*
+*.sublime-workspace*

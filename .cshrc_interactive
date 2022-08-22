@@ -1,0 +1,104 @@
+# ************************************************************************************************
+# *                 ___          *
+# *               /      \ ___   *
+# *             /     . _-_-_-   *
+# *      ___ /           /       *
+# *   #/               /    #    *  ENVIRONNEMENT JAZZ LAYOUT
+# *  /                /          *
+# * |____           /       #    *
+# *      \         /             *
+# *   #   |       /         #    * AUTHOR: PAB
+# *       |      /               *
+# *   #   |     /           #    *
+# *      /     /                 * DATE: 23/02/2009
+# * _ # /    /              #    *
+# *| \_/   /                     *
+# * \    /                  #    *
+# * |  / #   #   #   #   #       *
+# * |/                           *
+# ************************************************************************************************
+# * MODIF:
+# *
+# * COMMENT:  Loads personnal/team configuration. Not loaded in batch runs
+# *
+# ************************************************************************************************
+
+      ##########################
+      ###   Autocompletion   ###
+      ##########################
+
+#Disable case sensitivity
+set autolist
+set correct=cmd
+set complete=enhance
+
+# Seeks for the current revision completion file
+set complete_file=/usr/share/doc/tcsh-`tcsh --version | egrep -o '[0-9]+\.[0-9]+\.[0-9]+'`/complete.tcsh
+
+
+# If not found, load a hardcopy
+if (! -f $complete_file) then
+  echo "-W- Current tcsh version (`tcsh --version | egrep -o '[0-9]+\.[0-9]+\.[0-9]+'`) autocompletion file not found, taking a hardcopy instead"
+  set complete_file=/share/apps/dolphin_env/CSH/complete.tcsh
+endif
+
+source $complete_file
+
+#Auto completion for Git
+set complete_file=/usr/share/git-core/contrib/completion/git-completion.tcsh
+if ( -f $complete_file ) then
+  source $complete_file
+else
+  echo "-W- File for Git autocompletion not found"
+endif
+
+      #################################
+      ###  ENVIRONNEMENT Harmonie   ###
+      #################################
+
+# Specific aliases for harmonie Team
+if ( `groups | grep harmonie -c` ) then
+  source /share/apps/dolphin_env/CSH/harmonie_aliases.csh > /dev/null
+endif
+
+
+      #################################
+      ###  ENVIRONNEMENT Personnel  ###
+      #################################
+## ATTENTION, vos alias persos peuvent remplacer ou etre doublés par les alias communs !!! ##
+
+echo   "Welcome $user !"
+          ### SECTION PROMPT ###
+
+set     Bred="%B%{\033[1;31m%}"
+set     end="%b%{\033[0m%}"
+set prompt = "%{^[[32m%}%n%{^[[0m%}@%{^[[36m%}%m%{^[[0m%} (%{^[[36m%}%T%{^[[0m%}) ${Bred}{%?}${end} [%{^[[32m%}%~%{^[[0m%}]\n=> "
+unset Bred end
+
+          ### SECTION ALIAS ###
+
+alias C       "source ~/.cshrc"
+alias cdl     "cd \!*; ll"
+alias cdl     "cd \!* ; ll"
+alias duh     "du \!* -h --max-depth=1 | sort -h"
+alias grep    "grep --color"
+alias h20     "history | tail -20"
+alias ice     "icc2_shell -64bit -gui -f rm_setup/icc2_pnr_setup.tcl"
+alias k9      "kill -9 \!*"
+alias l       "la -X"
+alias la      "ls -al --color"
+alias ld      "ls -l | grep "^d""
+alias listVNC "ps -aux | grep vnc | grep -v -e defunct -e grep -e Warning| grep $user"
+alias ll      "ls -l --color"
+alias llm     "la --color | more"
+alias lls     "ls -F --color"
+alias ls      "ls -h --color"
+alias n       "nedit"
+alias psme    "ps -aux | grep $user"
+alias subl    "sublime_text"
+alias sysmon  "gnome-system-monitor &"
+alias v       "vim"
+alias vtabs   "vim -p "
+alias x       "exit"
+alias zombi   "ps -auxw | grep defunct | wc"
+

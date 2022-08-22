@@ -1,5 +1,89 @@
+
+if [[ $HOSTNAME == vm-aprisa ]]; then
+    return
+fi
+
+export DOLPHINENV_DIR=~/dolphin-environment
+export PATH=/share/apps/dolphin/solutions/2019_Q2a0/licensing/FLEXlm\:$PATH
+export PATH=$DOLPHINENV_DIR/BIN\:$PATH
+
+###############################
+###  ENVIRONNEMENT DOLPHIN  ###
+###############################
+#Test HOST IP to define location (France,Canada,Israel) and data server name
+if [[ -z $DATASTORAGE ]]; then
+  case $(hostname -i | cut -f3 -d.) in
+    50 )
+      export DATASTORAGE=manic
+      ;;
+    * )
+      export DATASTORAGE=scorpion
+      ;;
+  esac
+fi
+
+# export MODULEPATH=$HOME/mymodules:$MODULEPATH
+
+export MODULEPATH=/net/varan/volume1/PROJETS/VEP/USERS/fbe/vep/PROJECT:${MODULEPATH}
+#export MODULEPATH=/net/varan/volume1/PROJETS/VITEC-G60/USERS/fbe/G60_speak/SETUP/PROJECT:${MODULEPATH}
+export MODULEPATH=/net/varan/volume1/PROJETS/VITEC-G60/USERS/fbe/G60_unified_flow/project/setup:${MODULEPATH}
+export MODULEPATH=/net/varan/volume1/PROJETS/ULPMARK/USERS/fbe/ULPMARK/PROJECT:${MODULEPATH}
+export MODULEPATH=/net/varan/volume1/PROJETS/TCB/USERS/fbe/TCB_speak/SETUP/PROJECT:${MODULEPATH}
+export MODULEPATH=/net/varan/volume1/PROJETS/ABB-PVT-AR.01/USERS/fbe/ABB-PVT-AR.01/PROJECT:${MODULEPATH}
+export MODULEPATH=/net/varan/volume1/PROJETS/ABB-PVT-AF.01/USERS/fbe/ABB-PVT-AF.01_local/project/setup:${MODULEPATH}
+export MODULEPATH=/net/varan/volume1/PROJETS/meErKat/USERS/fbe/meErKat_local/project/setup:${MODULEPATH}
+export MODULEPATH=/net/varan/volume1/PROJETS/TINYRAPTOR/users/fbe/TINYRAPTOR_local/project/setup:${MODULEPATH}
+export MODULEPATH=/net/varan/volume1/PROJETS/PANTHER/USERS/fbe/PANTHER_local/project/setup:${MODULEPATH}
+
+
+# Adding module development project in first position so it can be debugged easily
+
+export MODULEPATH=${HOME}/modules/eda_tools:${MODULEPATH}
+export MODULEPATH=${HOME}/modules/eda_licenses:${MODULEPATH}
+
+module load license/meylan
+
+
+if [ ${BASH_VERSINFO:-0} -ge 3 ] && [ -r ${MODULESHOME}/init/bash_completion ]; then
+  . ${MODULESHOME}/init/bash_completion
+fi
+
+export PATHENV=$DOLPHINENV_DIR/dolphin
+export LOCALHOST=$(echo $HOST | sed 's/\..*//')
+export DOLPHIN_CONFIG_PATH=$PATHENV
+export EQUIPE=$(grep '^[^#]*'$LOCALHOST'[    ]' $PATHENV/hosts | sed 's/^[^#][^#]*#[^#]*#\([^#]*\)#.*/\1/')
+for machine in $(grep '^[^#].*\[DIS\]' $PATHENV/hosts | sed 's/^[0-9]*\.[0-9]*\.[0-9]*\.[0-9 ]*\s*\([^#]*\)#.*/\1/'); do
+  alias $machine="export DISPLAY=${machine}:0.0 ; echo 'DISPLAY = ${machine}:0.0'"
+done
+###############################
+###############################
+###############################
+
+
+## Change the umask to allow rw for the group but only read for the others when creating a new file or folder
+umask 002
+
+## Avoids issues when reading decimal numbers
+export LANG=en_US.UTF-8
+
+## Requested for some tools
+export TERM=xterm
+
+#Default SVN_EDITOR
+export SVN_EDITOR=vim
+
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
+
+#Add autocompletion for Makefiles:
+complete -W "\`grep -oE '^[a-zA-Z0-9_.-]+:([^=]|$)' ?akefile | sed 's/[^a-zA-Z0-9_.-]*$//'\`" make
+
+#Enable bash completion
+if [[ -r /etc/profile.d/bash_completion.sh  ]]; then
+    source /etc/profile.d/bash_completion.sh
+else
+    echo "-W- Improved Bash completion is unavailable"
+fi
 
 HISTCONTROL=ignoreboth
 
@@ -33,6 +117,14 @@ parse_git_branch()
   fi
 }
 
+function Color() {
+  echo "$(tput setaf $1)"
+}
+function ResetColor() {
+  echo "$(tput sgr0)"
+}
+
+
 # PROMPT COLOURS
 BLACK='\[\e[0;30m\]'      # Black - Regular
 RED='\[\e[0;31m\]'        # Red
@@ -52,12 +144,31 @@ CYAN_BOLD='\[\e[1;36m\]'    # Cyan - Bold
 WHITE_BOLD='\[\e[1;37m\]'   # White - Bold
 RESET='\[\e[0m\]'         # Text Reset
 
-export PS1="\n${GREEN}\u${RESET}@${BLUE}\h${RESET} [${PURPLE}\w${RESET}] ${RED}{\$?}${RESET} ${YELLOW}\$(parse_git_branch)${WHITE_BOLD}\n=> ${RESET}"
+function LastStatus() {
+    local last_status_n=$?
+    local last_status=$last_status_n
+    local reset=$(ResetColor)
+
+    local failure="✘"
+    local success="✔"
+
+    if [[ "$last_status_n" -gt 0 ]]; then
+        last_status="$(Color 5)${failure} ($last_status_n)$reset"
+    else
+        last_status="$(Color 2)$success$reset"
+    fi
+
+    echo "$last_status"
+}
+
+
+
+export PS1="\n${GREEN}\u${RESET}@${CYAN}\h${RESET} [${PURPLE}\w${RESET}] ${CYAN}(\D{%H:%M:%S})${RESET} \$(LastStatus) ${YELLOW}\$(parse_git_branch)${WHITE_BOLD}\n=> ${RESET}"
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
+    alias ls='ls -h --color=auto'
     alias dir='dir --color=auto'
     alias vdir='vdir --color=auto'
 
@@ -102,6 +213,7 @@ extract () {
           *.zip)       unzip $1       ;;
           *.Z)         uncompress $1  ;;
           *.7z)        7z x $1        ;;
+          *.tar.xz)    tar xf $1      ;;
           *)           echo "don't know how to extract '$1'..." ;;
       esac
   else
@@ -119,3 +231,15 @@ cl() {
  fi
 }
 
+#Allows to source CSH scripts in bash
+source_csh () {
+   exec csh -c " source $*; setenv ALREADY_SOURCED \"$ALREADY_SOURCED:$*:\"; exec bash"
+}
+
+
+# Dolphin environment
+export PRODUCTS_LINES=/scorpion/Products-Lines
+
+#Tool installation scripts
+source $DOLPHINENV_DIR/BASH/install_tools.sh
+source $DOLPHINENV_DIR/BASH/tools.sh
