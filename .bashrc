@@ -243,3 +243,8 @@ export PRODUCTS_LINES=/scorpion/Products-Lines
 #Tool installation scripts
 source $DOLPHINENV_DIR/BASH/install_tools.sh
 source $DOLPHINENV_DIR/BASH/tools.sh
+
+
+# Set colors for ls commands that do not rip off your eyes:
+export LS_COLORS="di=34:ln=35:so=32:pi=33:ex=31:bd=37:cd=1;37:su=1;31:sg=1;31:tw=1;34:ow=1;34"
+
